@@ -175,8 +175,15 @@
           <input id="salary" type="number" placeholder="$ / yr" min="0" step="5000">
         </div>
         <div class="fgroup">
-          <span class="flabel">Distance</span>
+          <span class="flabel">Location</span>
           <div class="row">
+            <select id="state" aria-label="State">
+              <option value="">Any state</option>
+              <option value="VIC">VIC</option><option value="NSW">NSW</option>
+              <option value="QLD">QLD</option><option value="SA">SA</option>
+              <option value="WA">WA</option><option value="TAS">TAS</option>
+              <option value="ACT">ACT</option><option value="NT">NT</option>
+            </select>
             <select id="dist">
               <option value="">Any</option><option value="5">5 km</option>
               <option value="10" selected>10 km</option><option value="25">25 km</option><option value="50">50 km</option>
@@ -232,10 +239,10 @@ $('mSmart').onclick=()=>setMode('smart');
 $('filtersBtn').onclick=()=>{ const p=$('panel'); const open=p.classList.toggle('open'); $('filtersBtn').setAttribute('aria-expanded',open); };
 $('types').addEventListener('click',e=>{const b=e.target.closest('.ftype'); if(!b)return; b.setAttribute('aria-pressed', b.getAttribute('aria-pressed')!=='true'); updateCount();});
 ['exact','remote'].forEach(id=>$(id).addEventListener('click',()=>{const b=$(id); b.setAttribute('aria-pressed', b.getAttribute('aria-pressed')!=='true'); updateCount();}));
-['date','salary','dist','sort'].forEach(id=>$(id).addEventListener('change',updateCount));
+['date','salary','dist','sort','state'].forEach(id=>$(id).addEventListener('change',updateCount));
 function updateCount(){
   const f=readFilters();
-  let n=f.jobTypes.length + (f.datePosted?1:0) + (f.salaryMin?1:0) + (f.exact?1:0) + (f.remote?1:0) + (f.distance&&f.distance!=='10'?1:0);
+  let n=f.jobTypes.length + (f.datePosted?1:0) + (f.salaryMin?1:0) + (f.exact?1:0) + (f.remote?1:0) + (f.state?1:0) + (f.distance&&f.distance!=='10'?1:0);
   const badge=$('fcount'); badge.textContent=n; badge.classList.toggle('on', n>0);
 }
 
@@ -264,7 +271,7 @@ function renderAtt(){
 function readFilters(){
   return {
     jobTypes:[...document.querySelectorAll('#types .ftype[aria-pressed="true"]')].map(b=>b.dataset.t),
-    datePosted:$('date').value, salaryMin:$('salary').value, distance:$('dist').value,
+    datePosted:$('date').value, salaryMin:$('salary').value, distance:$('dist').value, state:$('state').value,
     exact:$('exact').getAttribute('aria-pressed')==='true',
     remote:$('remote').getAttribute('aria-pressed')==='true', sort:$('sort').value
   };
