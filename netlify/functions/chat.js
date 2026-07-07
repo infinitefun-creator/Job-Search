@@ -1,74 +1,95 @@
-// Secure backend proxy: holds your API key, calls Claude with live web search,
-// and passes through any uploaded files (PDF / image / text) as context.
-// Runs as a Netlify Function at /.netlify/functions/chat
-//
-// Tuned to finish inside Netlify's ~30s function limit: it caps how many
-// live searches happen per request and bails out gracefully before the cutoff,
-// so it always returns results instead of being killed mid-run.
+// Live job search via the Adzuna API (Australia).
+// Holds your Adzuna keys server-side and returns clean, current listings —
+// each with a real apply link, posted date, and salary when available.
+// Runs at /.netlify/functions/chat
 
 exports.handler = async (event) => {
   if (event.httpMethod !== 'POST') return json(405, { error: 'Method not allowed' });
 
-  const key = process.env.ANTHROPIC_API_KEY;
-  if (!key) {
+  const id = process.env.ADZUNA_APP_ID;
+  const key = process.env.ADZUNA_APP_KEY;
+  if (!id || !key) {
     return json(500, {
-      error: 'Server is missing ANTHROPIC_API_KEY. Add it in Netlify -> Project configuration -> Environment variables, then redeploy.'
+      error: 'Server is missing ADZUNA_APP_ID / ADZUNA_APP_KEY. Add both in Netlify -> Project configuration -> Environment variables, then redeploy.'
     });
   }
 
-  let payload;
-  try { payload = JSON.parse(event.body || '{}'); }
+  let p;
+  try { p = JSON.parse(event.body || '{}'); }
   catch { return json(400, { error: 'Could not read request.' }); }
 
-  const { system, messages } = payload;
-  if (!Array.isArray(messages)) return json(400, { error: 'messages must be an array.' });
+  const what = (p.what || '').trim();
+  const where = (p.where || '').trim();
+  const distance = p.distance;
 
-  const convo = messages.slice();
-  let finalText = '';
-  const DEADLINE = Date.now() + 25000; // leave margin under Netlify's ~30s cap
+  const params = new URLSearchParams({
+    app_id: id,
+    app_key: key,
+    results_per_page: '20',
+    'content-type': 'application/json',
+    sort_by: 'date'
+  });
+  if (what) params.set('what', what);
+  if (where) {
+    params.set('where', where);
+    if (distance) params.set('distance', String(distance));
+  }
+
+  const url = 'https://api.adzuna.com/v1/api/jobs/au/search/1?' + params.toString();
 
   try {
-    // Resume any multi-step ("pause_turn") searches, but stop if we're low on time.
-    for (let step = 0; step < 3; step++) {
-      if (Date.now() > DEADLINE) break;
-
-      const r = await fetch('https://api.anthropic.com/v1/messages', {
-        method: 'POST',
-        headers: {
-          'content-type': 'application/json',
-          'x-api-key': key,
-          'anthropic-version': '2023-06-01'
-        },
-        body: JSON.stringify({
-          model: 'claude-sonnet-5',
-          max_tokens: 1500,
-          system: system || '',
-          messages: convo,
-          // Fewer searches per turn keeps us safely under the time limit.
-          tools: [{ type: 'web_search_20250305', name: 'web_search', max_uses: 3 }]
-        })
-      });
-
-      const data = await r.json();
-      if (!r.ok || data.error) {
-        return json(r.status || 500, {
-          error: (data.error && data.error.message) || ('Anthropic API error ' + r.status)
-        });
-      }
-
-      const blocks = Array.isArray(data.content) ? data.content : [];
-      finalText += blocks.filter(b => b.type === 'text').map(b => b.text).join('\n');
-      convo.push({ role: 'assistant', content: blocks });
-
-      if (data.stop_reason === 'pause_turn') continue;
-      break;
+    const r = await fetch(url);
+    const data = await r.json();
+    if (!r.ok) {
+      return json(r.status, { error: (data && (data.exception || data.error)) || ('Adzuna error ' + r.status) });
     }
-
-    return json(200, { text: finalText.trim() });
+    const jobs = (data.results || []).map(j => ({
+      title: j.title || 'Untitled role',
+      company: (j.company && j.company.display_name) || 'Not specified',
+      location: (j.location && j.location.display_name) || where || 'Australia',
+      salary: fmtSalary(j),
+      posted: rel(j.created),
+      contract: [j.contract_time, j.contract_type].filter(Boolean).join(' · ').replace(/_/g, ' '),
+      summary: clip(j.description),
+      url: j.redirect_url || ''
+    }));
+    return json(200, { count: data.count || jobs.length, jobs });
   } catch (e) {
     return json(502, { error: 'Upstream failure: ' + (e.message || String(e)) });
   }
 };
+
+function fmtSalary(j) {
+  const min = j.salary_min, max = j.salary_max;
+  if (!min && !max) return '';
+  const f = n => '$' + Math.round(n).toLocaleString();
+  let s = (min && max && min !== max) ? (f(min) + '–' + f(max)) : f(min || max);
+  s += '/yr';
+  if (String(j.salary_is_predicted) === '1') s += ' (est.)';
+  return s;
+}
+
+function rel(iso) {
+  if (!iso) return '';
+  const d = new Date(iso), now = new Date();
+  const days = Math.floor((now - d) / 86400000);
+  if (isNaN(days)) return '';
+  if (days <= 0) return 'today';
+  if (days === 1) return '1 day ago';
+  if (days < 30) return days + ' days ago';
+  const m = Math.floor(days / 30);
+  return m + (m === 1 ? ' month ago' : ' months ago');
+}
+
+function clip(html) {
+  if (!html) return '';
+  const t = String(html)
+    .replace(/<[^>]*>/g, '')
+    .replace(/&amp;/g, '&').replace(/&nbsp;/g, ' ')
+    .replace(/&#\d+;/g, ' ').replace(/&[a-z]+;/g, ' ')
+    .replace(/\s+/g, ' ').trim();
+  return t.length > 170 ? t.slice(0, 167) + '…' : t;
+}
 
 function json(statusCode, obj) {
   return { statusCode, headers: { 'content-type': 'application/json' }, body: JSON.stringify(obj) };
