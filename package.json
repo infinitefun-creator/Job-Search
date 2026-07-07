@@ -1,0 +1,6 @@
+{
+  "name": "job-match",
+  "version": "1.0.0",
+  "private": true,
+  "description": "A custom AI job-search chat with live web search and file upload."
+}
