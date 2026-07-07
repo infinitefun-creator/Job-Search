@@ -81,6 +81,26 @@
   .send:disabled{opacity:.4;cursor:not-allowed}
   .send:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 
+  /* results */
+  .msg.bot.wide{max-width:100%}
+  .msg.bot .lead{font-size:14px;color:#3a3f47;margin:2px 0 12px}
+  .jobs{display:flex;flex-direction:column;gap:10px}
+  .jobcard{display:block;text-decoration:none;color:inherit;background:var(--surface);
+    border:1px solid var(--line);border-radius:14px;padding:14px 16px;transition:.15s}
+  a.jobcard:hover{border-color:var(--accent);transform:translateY(-2px);
+    box-shadow:0 12px 26px -18px rgba(25,28,34,.45)}
+  a.jobcard:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+  .jobcard.nolink{opacity:.9}
+  .jt{font-family:var(--display);font-weight:600;font-size:16px;letter-spacing:-.01em;color:var(--ink)}
+  a.jobcard:hover .jt{color:var(--accent-deep)}
+  .jm{font-size:13px;color:#464b53;margin-top:2px}
+  .jc{display:flex;flex-wrap:wrap;gap:6px;margin-top:9px}
+  .chip2{font-family:var(--mono);font-size:10px;letter-spacing:.04em;background:var(--paper);
+    border:1px solid var(--line);border-radius:6px;padding:3px 7px;color:var(--muted)}
+  .js{font-size:13px;color:#5a5f67;margin-top:9px;line-height:1.45}
+  .jg{font-family:var(--mono);font-size:11px;color:var(--accent-deep);margin-top:11px;font-weight:700}
+  .jg.none{color:var(--muted);font-weight:400}
+  .note2{font-size:12.5px;color:var(--muted);margin-top:12px;font-style:italic}
   @media (max-width:520px){.area input{width:110px}}
   @media (prefers-reduced-motion:reduce){*{animation:none!important;scroll-behavior:auto}}
 </style>
@@ -131,12 +151,34 @@ const clip=document.getElementById('clip');
 const fileInput=document.getElementById('file');
 const tray=document.getElementById('tray');
 
-const SYSTEM=`You are Job Match, a live job-search assistant that anyone can use to find real, currently posted job listings matching what they describe — any role, industry, schedule, seniority, location, or country.
-Use the web_search tool to pull actual current listings from job sites (Seek, Indeed, LinkedIn, Jora, Glassdoor, Adzuna, Gumtree, Airtasker, and relevant local or company career pages). Always search before answering a jobs question. Never invent listings.
-If the user attaches a résumé, job ad, or screenshot, use it as context: infer their skills, seniority, and preferences, and match listings to it. If they attach a specific job ad, find similar or related roles.
-Only ask a brief clarifying question if the request is too vague to search at all. Otherwise search with sensible assumptions and state them in one line.
-For each match give: role title, employer, location, a key detail or two (pay, hours, contract type when available), and an apply link when you have one. Keep it to about 5–8 results, scannable, and offer to refine.
-Be honest about fit and flag mismatches. If nothing good turns up, say so and suggest a tweak. Friendly, practical, no filler.`;
+const SYSTEM=`You are Job Match, a live job-search assistant. Anyone can use you to find real, currently posted job listings matching what they describe — any role, industry, schedule, seniority, location, or country.
+Use the web_search tool to pull ACTUAL current listings (Seek, Indeed, LinkedIn, Jora, Glassdoor, Adzuna, Gumtree, Airtasker, and company career pages). Always search before answering. Never invent listings.
+If the user attaches a résumé, job ad, or screenshot, use it as context — infer their skills and preferences and match to it.
+
+URL RULES (critical):
+- Each job's "url" must be the EXACT link to that individual job posting, copied verbatim from the search results.
+- NEVER shorten, guess, or construct a URL. NEVER use a generic search, category, or listings page (e.g. a "/jobs/in-Suburb/part-time" page) as a job link.
+- If you cannot find a direct link to the specific posting, set "url" to "" (empty). Do not fabricate one.
+
+RESPONSE FORMAT (critical):
+Reply with ONLY a JSON object — no prose, no markdown, no code fences. Shape:
+{
+  "intro": "one short plain sentence about what you found",
+  "jobs": [
+    {
+      "title": "role title",
+      "company": "employer",
+      "location": "suburb, state",
+      "pay": "pay or hours if stated, else empty",
+      "posted": "when it was posted if stated (e.g. '3 days ago' or a date), else empty",
+      "summary": "one short line, max ~15 words",
+      "url": "exact direct posting link, or empty string",
+      "source": "board or site name"
+    }
+  ],
+  "note": "optional short caveat, or empty string"
+}
+Return at most 6 jobs, best matches first. If the user's message is a question rather than a search, put the answer in "intro", set "jobs" to []. If nothing good turns up, say so in "intro" and suggest a tweak in "note". Be honest about fit.`;
 
 let history=[]; let busy=false; let attachments=[]; // {name, kind, block}
 
@@ -168,6 +210,39 @@ function addBot(text){
 function showTyping(){const t=document.createElement('div'); t.className='typing'; t.id='typing';
   t.innerHTML='<span></span><span></span><span></span>'; stream.appendChild(t); stream.scrollTop=stream.scrollHeight;}
 function hideTyping(){const t=document.getElementById('typing'); if(t)t.remove();}
+function escAttr(s){return String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
+function extractJSON(s){
+  const a=s.indexOf('{'), b=s.lastIndexOf('}');
+  if(a<0||b<0) return null;
+  try{ return JSON.parse(s.slice(a,b+1)); }catch(_){ return null; }
+}
+function addResults(text){
+  const p=extractJSON(text);
+  if(!p || !Array.isArray(p.jobs)){ addBot(text); return; }   // graceful fallback
+  const w=document.createElement('div'); w.className='msg bot wide';
+  let html='<div class="who">Job Match</div>';
+  if(p.intro) html+='<div class="lead">'+esc(p.intro)+'</div>';
+  if(p.jobs.length){
+    html+='<div class="jobs">';
+    p.jobs.forEach(j=>{
+      const chips=[j.source,j.posted,j.pay].filter(Boolean)
+        .map(x=>'<span class="chip2">'+esc(x)+'</span>').join('');
+      const inner=
+        '<div class="jt">'+esc(j.title||'Untitled role')+'</div>'+
+        '<div class="jm">'+esc([j.company,j.location].filter(Boolean).join(' · '))+'</div>'+
+        (chips?'<div class="jc">'+chips+'</div>':'')+
+        (j.summary?'<div class="js">'+esc(j.summary)+'</div>':'')+
+        (j.url?'<div class="jg">View job →</div>':'<div class="jg none">no direct link found</div>');
+      html += j.url
+        ? '<a class="jobcard" href="'+escAttr(j.url)+'" target="_blank" rel="noopener">'+inner+'</a>'
+        : '<div class="jobcard nolink">'+inner+'</div>';
+    });
+    html+='</div>';
+  }
+  if(p.note) html+='<div class="note2">'+esc(p.note)+'</div>';
+  w.innerHTML=html;
+  stream.appendChild(w); stream.scrollTop=stream.scrollHeight;
+}
 
 // ---- file handling ----
 function readAsBase64(file){
@@ -248,7 +323,7 @@ async function send(text){
     hideTyping();
     if(!res.ok || data.error){ addBot('⚠️ '+(data.error||('Error '+res.status))); return; }
     const reply=(data.text||'').trim() || 'The search came back empty — try naming a role and a place, or broaden the terms.';
-    addBot(reply); history.push({role:'assistant', content:reply});
+    addResults(reply); history.push({role:'assistant', content:reply});
   }catch(e){
     hideTyping();
     addBot('⚠️ Couldn’t reach the server. If you’re opening this file directly, it needs to be deployed (Netlify) so the backend function can run.');
