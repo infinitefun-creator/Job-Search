@@ -18,323 +18,146 @@
   html,body{height:100%}
   body{background:var(--paper);color:var(--ink);font-family:var(--body);
     -webkit-font-smoothing:antialiased;display:flex;justify-content:center;padding:clamp(10px,2.5vw,28px)}
-  .app{width:100%;max-width:760px;height:calc(100vh - clamp(20px,5vw,56px));min-height:540px;
+  .app{width:100%;max-width:780px;height:calc(100vh - clamp(20px,5vw,56px));min-height:540px;
     background:var(--surface);border:1px solid var(--line);border-radius:20px;
     display:flex;flex-direction:column;overflow:hidden;box-shadow:0 20px 50px -30px rgba(25,28,34,.5)}
 
-  header.bar{padding:16px 20px;border-bottom:1px solid var(--line);display:flex;
-    align-items:center;gap:12px;flex-wrap:wrap;flex-shrink:0}
+  header.bar{padding:18px 20px 14px;border-bottom:1px solid var(--line);flex-shrink:0}
+  .brand{display:flex;align-items:center;gap:10px;margin-bottom:14px}
   .dot{width:10px;height:10px;border-radius:50%;background:var(--accent);box-shadow:0 0 0 4px rgba(59,91,219,.16)}
-  header.bar h1{font-family:var(--display);font-weight:700;font-size:18px;letter-spacing:-.01em}
-  header.bar h1 .live{font-family:var(--mono);font-size:10px;color:var(--accent-deep);letter-spacing:.14em;margin-left:8px;vertical-align:middle}
-  .area{margin-left:auto;display:flex;align-items:center;gap:6px}
-  .area label{font-family:var(--mono);font-size:10px;color:var(--muted);letter-spacing:.08em}
-  .area input{border:1px solid var(--line);border-radius:8px;padding:6px 10px;font-family:var(--body);
-    font-size:13px;background:var(--paper);width:150px}
-  .area input:focus{outline:2px solid var(--accent);outline-offset:0;background:var(--surface)}
+  .brand h1{font-family:var(--display);font-weight:700;font-size:19px;letter-spacing:-.01em}
+  .brand .live{font-family:var(--mono);font-size:10px;color:var(--accent-deep);letter-spacing:.14em;margin-left:2px}
 
-  .stream{flex:1;overflow-y:auto;padding:22px;display:flex;flex-direction:column;gap:16px;scroll-behavior:smooth}
-  .msg{max-width:88%;font-size:14.5px;line-height:1.55}
-  .msg.me{align-self:flex-end;background:var(--ink);color:#fff;padding:12px 16px;border-radius:16px 16px 4px 16px}
-  .msg.me .files{margin-top:8px;display:flex;flex-wrap:wrap;gap:6px}
-  .msg.me .files span{font-family:var(--mono);font-size:10px;background:rgba(255,255,255,.15);
-    padding:4px 8px;border-radius:6px}
-  .msg.bot .bubble{background:var(--paper);border:1px solid var(--line);padding:14px 16px;border-radius:4px 16px 16px 16px}
-  .msg.bot .bubble a{color:var(--accent-deep);font-weight:600;word-break:break-word}
-  .msg.bot .bubble strong{font-weight:600}
-  .msg.bot .who{font-family:var(--mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--accent);margin-bottom:6px}
+  .controls{display:flex;gap:8px;flex-wrap:wrap}
+  .controls input,.controls select{border:1px solid var(--line);border-radius:10px;padding:11px 13px;
+    font-family:var(--body);font-size:14px;background:var(--paper)}
+  .controls input:focus,.controls select:focus{outline:2px solid var(--accent);outline-offset:0;background:var(--surface)}
+  #q{flex:1 1 240px}
+  #where{flex:1 1 150px}
+  #dist{flex:0 0 auto}
+  .go{background:var(--ink);color:#fff;border:none;border-radius:10px;padding:0 20px;
+    font-family:var(--display);font-weight:600;font-size:14px;cursor:pointer;transition:.15s;flex:0 0 auto}
+  .go:hover:not(:disabled){background:var(--accent)}
+  .go:disabled{opacity:.4;cursor:not-allowed}
+  .go:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 
-  .intro{text-align:center;color:var(--muted);margin:auto;max-width:48ch;padding:20px}
-  .intro .big{font-family:var(--display);font-weight:600;font-size:23px;color:var(--ink);margin-bottom:8px;letter-spacing:-.01em}
+  .results{flex:1;overflow-y:auto;padding:18px 20px 22px}
+  .meta{font-family:var(--mono);font-size:11px;letter-spacing:.05em;color:var(--muted);
+    text-transform:uppercase;margin-bottom:14px}
+  .intro{text-align:center;color:var(--muted);max-width:44ch;margin:12vh auto 0;padding:0 12px}
+  .intro .big{font-family:var(--display);font-weight:600;font-size:22px;color:var(--ink);margin-bottom:8px;letter-spacing:-.01em}
   .intro p{font-size:14px}
 
-  .typing{align-self:flex-start;display:flex;gap:5px;padding:14px 16px;background:var(--paper);border:1px solid var(--line);border-radius:4px 16px 16px 16px}
-  .typing span{width:7px;height:7px;border-radius:50%;background:var(--muted);animation:blink 1.3s infinite ease-in-out}
-  .typing span:nth-child(2){animation-delay:.2s}.typing span:nth-child(3){animation-delay:.4s}
-  @keyframes blink{0%,80%,100%{opacity:.25;transform:translateY(0)}40%{opacity:1;transform:translateY(-3px)}}
-
-  .chips{display:flex;gap:8px;flex-wrap:wrap;padding:0 22px 10px;flex-shrink:0}
-  .chip{font-family:var(--mono);font-size:11.5px;padding:8px 13px;border-radius:999px;border:1px solid var(--line);
-    background:var(--surface);color:var(--muted);cursor:pointer;transition:.15s}
-  .chip:hover{border-color:var(--accent);color:var(--ink)}
-  .chip:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
-
-  .tray{padding:0 18px;display:flex;flex-wrap:wrap;gap:8px;flex-shrink:0}
-  .tray:empty{display:none}
-  .att{display:flex;align-items:center;gap:8px;background:var(--paper);border:1px solid var(--line);
-    border-radius:10px;padding:6px 8px 6px 10px;font-size:12px}
-  .att .k{font-family:var(--mono);font-size:9px;color:var(--accent-deep);letter-spacing:.1em;text-transform:uppercase}
-  .att button{border:none;background:none;cursor:pointer;color:var(--muted);font-size:15px;line-height:1;padding:0 2px}
-  .att button:hover{color:var(--ink)}
-
-  .composer{display:flex;gap:10px;padding:14px 18px;border-top:1px solid var(--line);flex-shrink:0;align-items:flex-end}
-  .clip{width:44px;height:44px;flex-shrink:0;border:1px solid var(--line);border-radius:12px;background:var(--paper);
-    cursor:pointer;font-size:19px;color:var(--muted);transition:.15s}
-  .clip:hover{border-color:var(--accent);color:var(--accent)}
-  .clip:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
-  .composer textarea{flex:1;resize:none;border:1px solid var(--line);border-radius:12px;padding:12px 14px;
-    font-family:var(--body);font-size:14.5px;line-height:1.4;max-height:120px;background:var(--paper)}
-  .composer textarea:focus{outline:2px solid var(--accent);outline-offset:0;background:var(--surface)}
-  .send{background:var(--ink);color:#fff;border:none;border-radius:12px;padding:0 20px;height:44px;
-    font-family:var(--display);font-weight:600;font-size:15px;cursor:pointer;transition:.15s}
-  .send:hover:not(:disabled){background:var(--accent)}
-  .send:disabled{opacity:.4;cursor:not-allowed}
-  .send:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
-
-  /* results */
-  .msg.bot.wide{max-width:100%}
-  .msg.bot .lead{font-size:14px;color:#3a3f47;margin:2px 0 12px}
   .jobs{display:flex;flex-direction:column;gap:10px}
   .jobcard{display:block;text-decoration:none;color:inherit;background:var(--surface);
-    border:1px solid var(--line);border-radius:14px;padding:14px 16px;transition:.15s}
-  a.jobcard:hover{border-color:var(--accent);transform:translateY(-2px);
-    box-shadow:0 12px 26px -18px rgba(25,28,34,.45)}
+    border:1px solid var(--line);border-radius:14px;padding:15px 17px;transition:.15s}
+  a.jobcard:hover{border-color:var(--accent);transform:translateY(-2px);box-shadow:0 12px 26px -18px rgba(25,28,34,.45)}
   a.jobcard:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
-  .jobcard.nolink{opacity:.9}
-  .jt{font-family:var(--display);font-weight:600;font-size:16px;letter-spacing:-.01em;color:var(--ink)}
+  .jt{font-family:var(--display);font-weight:600;font-size:16.5px;letter-spacing:-.01em;color:var(--ink)}
   a.jobcard:hover .jt{color:var(--accent-deep)}
-  .jm{font-size:13px;color:#464b53;margin-top:2px}
-  .jc{display:flex;flex-wrap:wrap;gap:6px;margin-top:9px}
+  .jm{font-size:13px;color:#464b53;margin-top:3px}
+  .jc{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
   .chip2{font-family:var(--mono);font-size:10px;letter-spacing:.04em;background:var(--paper);
-    border:1px solid var(--line);border-radius:6px;padding:3px 7px;color:var(--muted)}
-  .js{font-size:13px;color:#5a5f67;margin-top:9px;line-height:1.45}
+    border:1px solid var(--line);border-radius:6px;padding:3px 8px;color:var(--muted)}
+  .chip2.date{color:var(--accent-deep);border-color:#cdd6f5;background:#eef1fc}
+  .js{font-size:13px;color:#5a5f67;margin-top:10px;line-height:1.5}
   .jg{font-family:var(--mono);font-size:11px;color:var(--accent-deep);margin-top:11px;font-weight:700}
-  .jg.none{color:var(--muted);font-weight:400}
-  .note2{font-size:12.5px;color:var(--muted);margin-top:12px;font-style:italic}
-  @media (max-width:520px){.area input{width:110px}}
-  @media (prefers-reduced-motion:reduce){*{animation:none!important;scroll-behavior:auto}}
+
+  .state{text-align:center;color:var(--muted);margin-top:8vh;font-size:14px}
+  .spin{width:26px;height:26px;border:3px solid var(--line);border-top-color:var(--accent);
+    border-radius:50%;margin:10vh auto 12px;animation:spin .8s linear infinite}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  @media (prefers-reduced-motion:reduce){.spin{animation:none}*{transition:none!important}}
 </style>
 </head>
 <body>
 <div class="app">
   <header class="bar">
-    <span class="dot" aria-hidden="true"></span>
-    <h1>Job Match<span class="live">LIVE SEARCH</span></h1>
-    <div class="area">
-      <label for="area">Based in</label>
-      <input id="area" type="text" placeholder="any city (optional)" autocomplete="off">
+    <div class="brand"><span class="dot" aria-hidden="true"></span>
+      <h1>Job Match</h1><span class="live">LIVE · ADZUNA</span></div>
+    <div class="controls">
+      <input id="q" type="text" placeholder="Job title or keywords — e.g. casual retail, registered nurse" autocomplete="off">
+      <input id="where" type="text" placeholder="Suburb or city (optional)" autocomplete="off">
+      <select id="dist" aria-label="Distance">
+        <option value="">Any distance</option>
+        <option value="5">Within 5 km</option>
+        <option value="10" selected>Within 10 km</option>
+        <option value="25">Within 25 km</option>
+        <option value="50">Within 50 km</option>
+      </select>
+      <button class="go" id="go">Search</button>
     </div>
   </header>
 
-  <div class="stream" id="stream">
+  <div class="results" id="results">
     <div class="intro" id="intro">
-      <div class="big">Describe the job. Attach anything useful.</div>
-      <p>Any role, schedule, or place. Add a résumé, a job ad, or a screenshot with the paperclip
-        and I'll use it to match you better. Then just say what you're after.</p>
+      <div class="big">Search live jobs.</div>
+      <p>Type a role or keywords, add a location if you like, and get current listings — each links
+        straight to the real posting, with the date it went up.</p>
     </div>
-  </div>
-
-  <div class="chips" id="chips">
-    <button class="chip">Match jobs to my attached résumé</button>
-    <button class="chip">Full-time data analyst roles, hybrid</button>
-    <button class="chip">Part-time warehouse work, weekday mornings</button>
-    <button class="chip">Weekend retail near me</button>
-  </div>
-
-  <div class="tray" id="tray"></div>
-
-  <div class="composer">
-    <button class="clip" id="clip" title="Attach a file" aria-label="Attach a file">📎</button>
-    <input type="file" id="file" multiple accept=".pdf,.png,.jpg,.jpeg,.gif,.webp,.txt,.md,.csv" hidden>
-    <textarea id="input" rows="1" placeholder="e.g. casual hospitality in Fitzroy, Fri–Sun only…"></textarea>
-    <button class="send" id="send">Send</button>
   </div>
 </div>
 
 <script>
-const stream=document.getElementById('stream');
-const input=document.getElementById('input');
-const sendBtn=document.getElementById('send');
-const intro=document.getElementById('intro');
-const areaInput=document.getElementById('area');
-const clip=document.getElementById('clip');
-const fileInput=document.getElementById('file');
-const tray=document.getElementById('tray');
+const q=document.getElementById('q');
+const whereEl=document.getElementById('where');
+const dist=document.getElementById('dist');
+const go=document.getElementById('go');
+const results=document.getElementById('results');
 
-const SYSTEM=`You are Job Match, a live job-search assistant. Anyone can use you to find real, currently posted job listings matching what they describe — any role, industry, schedule, seniority, location, or country.
-Use the web_search tool to pull ACTUAL current listings (Seek, Indeed, LinkedIn, Jora, Glassdoor, Adzuna, Gumtree, Airtasker, and company career pages). Always search before answering. Never invent listings.
-If the user attaches a résumé, job ad, or screenshot, use it as context — infer their skills and preferences and match to it.
+function esc(s){return String(s==null?'':s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));}
+function escAttr(s){return String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
 
-URL RULES (critical):
-- Each job's "url" must be the EXACT link to that individual job posting, copied verbatim from the search results.
-- NEVER shorten, guess, or construct a URL. NEVER use a generic search, category, or listings page (e.g. a "/jobs/in-Suburb/part-time" page) as a job link.
-- If you cannot find a direct link to the specific posting, set "url" to "" (empty). Do not fabricate one.
+function setLoading(){ results.innerHTML='<div class="spin" aria-label="Searching"></div><div class="state">Searching live listings…</div>'; }
+function setState(msg){ results.innerHTML='<div class="state">'+esc(msg)+'</div>'; }
 
-RESPONSE FORMAT (critical):
-Reply with ONLY a JSON object — no prose, no markdown, no code fences. Shape:
-{
-  "intro": "one short plain sentence about what you found",
-  "jobs": [
-    {
-      "title": "role title",
-      "company": "employer",
-      "location": "suburb, state",
-      "pay": "pay or hours if stated, else empty",
-      "posted": "when it was posted if stated (e.g. '3 days ago' or a date), else empty",
-      "summary": "one short line, max ~15 words",
-      "url": "exact direct posting link, or empty string",
-      "source": "board or site name"
-    }
-  ],
-  "note": "optional short caveat, or empty string"
-}
-Return at most 6 jobs, best matches first. If the user's message is a question rather than a search, put the answer in "intro", set "jobs" to []. If nothing good turns up, say so in "intro" and suggest a tweak in "note". Be honest about fit.`;
-
-let history=[]; let busy=false; let attachments=[]; // {name, kind, block}
-
-function esc(s){return s.replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));}
-function render(text){
-  let h=esc(text);
-  h=h.replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>');
-  h=h.replace(/\[([^\]]+)\]\((https?:\/\/[^)]+)\)/g,'<a href="$2" target="_blank" rel="noopener">$1</a>');
-  h=h.replace(/(^|[^"])(https?:\/\/[^\s)<]+)/g,'$1<a href="$2" target="_blank" rel="noopener">$2</a>');
-  h=h.replace(/\n/g,'<br>');
-  return h;
-}
-function addUser(text, fileNames){
-  if(intro)intro.remove();
-  const d=document.createElement('div'); d.className='msg me';
-  d.textContent=text;
-  if(fileNames && fileNames.length){
-    const f=document.createElement('div'); f.className='files';
-    fileNames.forEach(n=>{const s=document.createElement('span'); s.textContent='📎 '+n; f.appendChild(s);});
-    d.appendChild(f);
-  }
-  stream.appendChild(d); stream.scrollTop=stream.scrollHeight;
-}
-function addBot(text){
-  const w=document.createElement('div'); w.className='msg bot';
-  w.innerHTML='<div class="who">Job Match</div><div class="bubble">'+render(text)+'</div>';
-  stream.appendChild(w); stream.scrollTop=stream.scrollHeight;
-}
-function showTyping(){const t=document.createElement('div'); t.className='typing'; t.id='typing';
-  t.innerHTML='<span></span><span></span><span></span>'; stream.appendChild(t); stream.scrollTop=stream.scrollHeight;}
-function hideTyping(){const t=document.getElementById('typing'); if(t)t.remove();}
-function escAttr(s){return String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
-function extractJSON(s){
-  const a=s.indexOf('{'), b=s.lastIndexOf('}');
-  if(a<0||b<0) return null;
-  try{ return JSON.parse(s.slice(a,b+1)); }catch(_){ return null; }
-}
-function addResults(text){
-  const p=extractJSON(text);
-  if(!p || !Array.isArray(p.jobs)){ addBot(text); return; }   // graceful fallback
-  const w=document.createElement('div'); w.className='msg bot wide';
-  let html='<div class="who">Job Match</div>';
-  if(p.intro) html+='<div class="lead">'+esc(p.intro)+'</div>';
-  if(p.jobs.length){
-    html+='<div class="jobs">';
-    p.jobs.forEach(j=>{
-      const chips=[j.source,j.posted,j.pay].filter(Boolean)
-        .map(x=>'<span class="chip2">'+esc(x)+'</span>').join('');
-      const inner=
-        '<div class="jt">'+esc(j.title||'Untitled role')+'</div>'+
-        '<div class="jm">'+esc([j.company,j.location].filter(Boolean).join(' · '))+'</div>'+
-        (chips?'<div class="jc">'+chips+'</div>':'')+
-        (j.summary?'<div class="js">'+esc(j.summary)+'</div>':'')+
-        (j.url?'<div class="jg">View job →</div>':'<div class="jg none">no direct link found</div>');
-      html += j.url
-        ? '<a class="jobcard" href="'+escAttr(j.url)+'" target="_blank" rel="noopener">'+inner+'</a>'
-        : '<div class="jobcard nolink">'+inner+'</div>';
-    });
-    html+='</div>';
-  }
-  if(p.note) html+='<div class="note2">'+esc(p.note)+'</div>';
-  w.innerHTML=html;
-  stream.appendChild(w); stream.scrollTop=stream.scrollHeight;
-}
-
-// ---- file handling ----
-function readAsBase64(file){
-  return new Promise((res,rej)=>{
-    const r=new FileReader();
-    r.onload=()=>res(String(r.result).split(',')[1]);
-    r.onerror=()=>rej(new Error('read failed')); r.readAsDataURL(file);
+function renderJobs(data){
+  const jobs=Array.isArray(data.jobs)?data.jobs:[];
+  if(!jobs.length){ setState('No current listings matched. Try broader keywords, or widen the distance.'); return; }
+  const total=data.count?(' of '+data.count.toLocaleString()):'';
+  let html='<div class="meta">Showing '+jobs.length+total+' · newest first</div><div class="jobs">';
+  jobs.forEach(j=>{
+    const chips=[];
+    if(j.posted) chips.push('<span class="chip2 date">'+esc(j.posted)+'</span>');
+    if(j.salary) chips.push('<span class="chip2">'+esc(j.salary)+'</span>');
+    if(j.contract) chips.push('<span class="chip2">'+esc(j.contract)+'</span>');
+    const inner=
+      '<div class="jt">'+esc(j.title)+'</div>'+
+      '<div class="jm">'+esc([j.company,j.location].filter(Boolean).join(' · '))+'</div>'+
+      (chips.length?'<div class="jc">'+chips.join('')+'</div>':'')+
+      (j.summary?'<div class="js">'+esc(j.summary)+'</div>':'')+
+      '<div class="jg">View job →</div>';
+    html += j.url
+      ? '<a class="jobcard" href="'+escAttr(j.url)+'" target="_blank" rel="noopener">'+inner+'</a>'
+      : '<div class="jobcard">'+inner+'</div>';
   });
+  html+='</div>';
+  results.innerHTML=html;
+  results.scrollTop=0;
 }
-function readAsText(file){
-  return new Promise((res,rej)=>{
-    const r=new FileReader();
-    r.onload=()=>res(String(r.result)); r.onerror=()=>rej(new Error('read failed')); r.readAsText(file);
-  });
-}
-function renderTray(){
-  tray.innerHTML='';
-  attachments.forEach((a,i)=>{
-    const el=document.createElement('div'); el.className='att';
-    el.innerHTML='<span class="k">'+a.kind+'</span>'+esc(a.name)+' <button aria-label="Remove">×</button>';
-    el.querySelector('button').onclick=()=>{attachments.splice(i,1); renderTray();};
-    tray.appendChild(el);
-  });
-}
-async function handleFiles(list){
-  for(const file of list){
-    if(file.size > 4.5*1024*1024){ addBot('“'+file.name+'” is over ~4.5MB and may be too big to send — try a smaller file.'); continue; }
-    const type=file.type;
-    try{
-      if(type==='application/pdf'){
-        const data=await readAsBase64(file);
-        attachments.push({name:file.name, kind:'pdf', block:{type:'document', source:{type:'base64', media_type:'application/pdf', data}}});
-      }else if(type.startsWith('image/')){
-        const data=await readAsBase64(file);
-        attachments.push({name:file.name, kind:'image', block:{type:'image', source:{type:'base64', media_type:type, data}}});
-      }else{ // text-ish
-        const text=await readAsText(file);
-        attachments.push({name:file.name, kind:'text', block:{type:'text', text:'Attached file "'+file.name+'":\n\n'+text.slice(0,20000)}});
-      }
-    }catch(e){ addBot('Couldn’t read “'+file.name+'”.'); }
-  }
-  renderTray();
-}
-clip.addEventListener('click',()=>fileInput.click());
-fileInput.addEventListener('change',e=>{handleFiles(e.target.files); fileInput.value='';});
 
-// ---- send ----
-async function send(text){
-  if(busy) return;
-  const hasFiles=attachments.length>0;
-  if(!text.trim() && !hasFiles) return;
-  busy=true; sendBtn.disabled=true;
-
-  const names=attachments.map(a=>a.name);
-  addUser(text.trim()||'(sent attachment)', names);
-
-  const area=areaInput.value.trim();
-  let userText=text.trim();
-  if(history.length===0 && area) userText='[My default location is '+area+'.]\n'+userText;
-
-  let content;
-  if(hasFiles){
-    content=[...attachments.map(a=>a.block)];
-    if(userText) content.push({type:'text', text:userText});
-  }else{
-    content=userText;
-  }
-  history.push({role:'user', content});
-  attachments=[]; renderTray();
-  input.value=''; input.style.height='auto'; showTyping();
-
+async function search(){
+  const what=q.value.trim();
+  const where=whereEl.value.trim();
+  if(!what && !where){ q.focus(); return; }
+  go.disabled=true; setLoading();
   try{
     const res=await fetch('/.netlify/functions/chat',{
       method:'POST', headers:{'content-type':'application/json'},
-      body:JSON.stringify({system:SYSTEM, messages:history})
+      body:JSON.stringify({ what, where, distance: dist.value })
     });
     const data=await res.json();
-    hideTyping();
-    if(!res.ok || data.error){ addBot('⚠️ '+(data.error||('Error '+res.status))); return; }
-    const reply=(data.text||'').trim() || 'The search came back empty — try naming a role and a place, or broaden the terms.';
-    addResults(reply); history.push({role:'assistant', content:reply});
+    if(!res.ok || data.error){ setState('⚠️ '+(data.error||('Error '+res.status))); return; }
+    renderJobs(data);
   }catch(e){
-    hideTyping();
-    addBot('⚠️ Couldn’t reach the server. If you’re opening this file directly, it needs to be deployed (Netlify) so the backend function can run.');
-  }finally{ busy=false; sendBtn.disabled=false; input.focus(); }
+    setState('⚠️ Couldn’t reach the server. If the site was just updated, wait for the deploy to finish and try again.');
+  }finally{ go.disabled=false; }
 }
 
-sendBtn.addEventListener('click',()=>send(input.value));
-input.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault(); send(input.value);}});
-input.addEventListener('input',()=>{input.style.height='auto'; input.style.height=Math.min(input.scrollHeight,120)+'px';});
-document.querySelectorAll('#chips .chip').forEach(c=>c.addEventListener('click',()=>send(c.textContent)));
-input.focus();
+go.addEventListener('click', search);
+[q, whereEl].forEach(el=>el.addEventListener('keydown', e=>{ if(e.key==='Enter'){ e.preventDefault(); search(); } }));
+dist.addEventListener('change', ()=>{ if(q.value.trim()||whereEl.value.trim()) search(); });
+q.focus();
 </script>
 </body>
 </html>
