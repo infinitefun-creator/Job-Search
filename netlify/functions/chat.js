@@ -66,6 +66,7 @@ function normalizeFilters(p) {
   return {
     what: (p.what || '').trim(),
     where: (p.where || '').trim(),
+    state: (p.state || '').trim(),
     exact: !!p.exact,
     distance: p.distance || '',
     jobTypes: Array.isArray(p.jobTypes) ? p.jobTypes : [],
@@ -88,9 +89,11 @@ async function fetchAdzuna(f) {
   if (f.jobTypes.includes('casual')) what = (what + ' casual').trim();
   if (f.remote) what = (what + ' remote').trim();
   if (what) params.set('what', what);
-  if (f.where) {
-    params.set('where', f.where);
-    params.set('distance', String(f.exact ? 1 : (f.distance || 10)));
+  const whereFull = f.where ? (f.state ? f.where + ', ' + stateName(f.state) : f.where)
+                            : (f.state ? stateName(f.state) : '');
+  if (whereFull) {
+    params.set('where', whereFull);
+    if (f.where) params.set('distance', String(f.exact ? 1 : (f.distance || 10)));
   }
   // Apply a single job-type flag when exactly one non-casual type is chosen.
   const primary = f.jobTypes.filter(t => t !== 'casual');
@@ -132,7 +135,8 @@ async function fetchJSearch(f) {
   const dateMap = { '1': 'today', '3': '3days', '7': 'week', '14': 'month' };
   const qBits = [];
   if (f.what) qBits.push(f.what);
-  if (f.where) qBits.push('in ' + f.where);
+  if (f.where) qBits.push('in ' + f.where + (f.state ? ', ' + f.state : ''));
+  else if (f.state) qBits.push('in ' + f.state);
   if (!qBits.length) qBits.push('jobs in Australia');
   const params = new URLSearchParams({
     query: qBits.join(' '), page: String(f.page), num_pages: '1', country: 'au'
@@ -148,7 +152,9 @@ async function fetchJSearch(f) {
     });
     const raw = await r.text();
     let d; try { d = JSON.parse(raw); } catch { return { jobs: [], note: 'JSearch returned no data (check the RapidAPI key or free-tier limit).' }; }
-    if (!r.ok) return { jobs: [], note: 'JSearch error ' + r.status + (r.status === 429 ? ' — free-tier limit reached for now.' : '.') };
+    if (!r.ok) return { jobs: [], note: r.status === 404
+      ? 'JSearch not connected (404) — on RapidAPI, subscribe your key to the free JSearch plan, then redeploy.'
+      : ('JSearch error ' + r.status + (r.status === 429 ? ' — free-tier limit reached for now.' : '.')) };
     const jobs = (d.data || []).map(j => {
       const sal = fmtSalaryPeriod(j.job_min_salary, j.job_max_salary, j.job_salary_period);
       return {
@@ -256,4 +262,5 @@ function clip(html) {
   const t = String(html).replace(/<[^>]*>/g, '').replace(/&amp;/g, '&').replace(/&nbsp;/g, ' ').replace(/&#\d+;/g, ' ').replace(/&[a-z]+;/g, ' ').replace(/\s+/g, ' ').trim();
   return t.length > 180 ? t.slice(0, 177) + '…' : t;
 }
+function stateName(s) { return ({ VIC: 'Victoria', NSW: 'New South Wales', QLD: 'Queensland', SA: 'South Australia', WA: 'Western Australia', TAS: 'Tasmania', ACT: 'Australian Capital Territory', NT: 'Northern Territory' })[String(s).toUpperCase()] || s; }
 function json(statusCode, obj) { return { statusCode, headers: { 'content-type': 'application/json' }, body: JSON.stringify(obj) }; }
