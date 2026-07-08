@@ -333,7 +333,8 @@ function renderJobs(data, reset){
   const jobs=Array.isArray(data.jobs)?data.jobs:[];
   if(reset && !jobs.length){
     const why = data.note ? esc(data.note) : 'Try broader terms, fewer filters, or a wider distance.';
-    results.innerHTML='<div class="state">No matches.<br><br><span style="color:#8a5a00;font-size:13px">'+why+'</span></div>';
+    const dbg = data.debug ? '<pre style="text-align:left;font-size:11px;color:#8a5a00;white-space:pre-wrap;margin-top:10px;background:#faf6ee;border:1px solid #eadfc8;border-radius:8px;padding:10px">'+esc(JSON.stringify(data.debug,null,1))+'</pre>' : '';
+    results.innerHTML='<div class="state">No matches.<br><br><span style="color:#8a5a00;font-size:13px">'+why+'</span>'+dbg+'</div>';
     return;
   }
   let container=results.querySelector('.jobs');
