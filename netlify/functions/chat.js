@@ -26,6 +26,7 @@ exports.handler = async (event) => {
   let notes = [];
 
   // SMART: let the AI read the paragraph + résumé and derive the search.
+  let debug = {};
   if (mode === 'smart') {
     if (!ANTHROPIC_KEY) {
       notes.push('Smart mode needs ANTHROPIC_API_KEY set in Netlify; searched on your text as keywords instead.');
@@ -33,14 +34,16 @@ exports.handler = async (event) => {
     } else {
       try {
         const ex = await smartExtract(p, f);
+        debug.extracted = { what: ex.what, where: ex.where, jobTypes: ex.jobTypes };
         f = mergeExtract(f, ex);
         profile = ex.profile || p.paragraph || '';
       } catch (e) {
-        notes.push('Could not interpret the description; searched on your text as keywords.');
+        notes.push('AI step failed: ' + (e.message || e) + ' — searched on your text as keywords.');
         if (!f.what && p.paragraph) f.what = String(p.paragraph).slice(0, 120);
       }
     }
   }
+  debug.searchWhat = f.what; debug.searchWhere = f.where; debug.searchState = f.state;
 
   // Fetch sources in parallel (each guarded).
   const [adz, js] = await Promise.all([ fetchAdzuna(f), fetchJSearch(f) ]);
@@ -58,7 +61,12 @@ exports.handler = async (event) => {
 
   const count = adz.count || jobs.length;
   jobs.forEach(j => { delete j.salaryAnnual; delete j.ts; });
-  return json(200, { count, jobs, mode, page: f.page, note: notes.join(' ') });
+  debug.adzunaReturned = (adz.jobs || []).length;
+  debug.jsearchReturned = (js.jobs || []).length;
+  if (!jobs.length && !notes.length) {
+    notes.push('Searched for "' + (f.what || '(none)') + '"' + (f.where ? ' in ' + f.where : '') + (f.state ? ', ' + f.state : '') + ' — 0 from Adzuna, ' + debug.jsearchReturned + ' from JSearch. Try broader terms or fewer filters.');
+  }
+  return json(200, { count, jobs, mode, page: f.page, note: notes.join(' '), debug });
 };
 
 // ---------- filters ----------
