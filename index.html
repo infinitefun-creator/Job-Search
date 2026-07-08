@@ -331,7 +331,11 @@ function wireCards(){
 }
 function renderJobs(data, reset){
   const jobs=Array.isArray(data.jobs)?data.jobs:[];
-  if(reset && !jobs.length){ results.innerHTML='<div class="state">No matches. Try broader terms, fewer filters, or a wider distance.</div>'; return; }
+  if(reset && !jobs.length){
+    const why = data.note ? esc(data.note) : 'Try broader terms, fewer filters, or a wider distance.';
+    results.innerHTML='<div class="state">No matches.<br><br><span style="color:#8a5a00;font-size:13px">'+why+'</span></div>';
+    return;
+  }
   let container=results.querySelector('.jobs');
   if(reset||!container){
     const total=data.count?(' of '+Number(data.count).toLocaleString()):'';
