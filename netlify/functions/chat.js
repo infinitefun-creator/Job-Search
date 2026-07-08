@@ -63,8 +63,8 @@ exports.handler = async (event) => {
   jobs.forEach(j => { delete j.salaryAnnual; delete j.ts; });
   debug.adzunaReturned = (adz.jobs || []).length;
   debug.jsearchReturned = (js.jobs || []).length;
-  if (!jobs.length && !notes.length) {
-    notes.push('Searched for "' + (f.what || '(none)') + '"' + (f.where ? ' in ' + f.where : '') + (f.state ? ', ' + f.state : '') + ' — 0 from Adzuna, ' + debug.jsearchReturned + ' from JSearch. Try broader terms or fewer filters.');
+  if (!jobs.length) {
+    notes.push('[search] what="' + (f.what || '(none)') + '"' + (f.where ? ' where="' + f.where + '"' : '') + (f.state ? ' state=' + f.state : '') + ' → Adzuna:' + debug.adzunaReturned + ' JSearch:' + debug.jsearchReturned + '.');
   }
   return json(200, { count, jobs, mode, page: f.page, note: notes.join(' '), debug });
 };
